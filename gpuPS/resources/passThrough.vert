@@ -1,6 +1,7 @@
 //#extension GL_ARB_draw_buffers : enable
-uniform sampler2D posArray;
-uniform sampler2D velArray;
+//#extension GL_ARB_texture_rectangle : enable
+//#extension GL_ARB_texture_non_power_of_two : enable
+
 varying vec4 texCoord;
 
 void main()

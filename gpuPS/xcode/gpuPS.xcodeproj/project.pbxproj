@@ -19,10 +19,11 @@
 		5323E6B60EAFCA7E003A9687 /* QTKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5323E6B50EAFCA7E003A9687 /* QTKit.framework */; };
 		53E3CDFC0E86099300238D2B /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 53E3CDFB0E86099300238D2B /* Carbon.framework */; };
 		8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
-		B02EF12A15F6B0AC00BCB400 /* pos.frag in Resources */ = {isa = PBXBuildFile; fileRef = B02EF12915F6B0AC00BCB400 /* pos.frag */; };
-		B02EF12E15F6B0B500BCB400 /* pos.vert in Resources */ = {isa = PBXBuildFile; fileRef = B02EF12B15F6B0B500BCB400 /* pos.vert */; };
-		B02EF12F15F6B0B500BCB400 /* vDispl.frag in Resources */ = {isa = PBXBuildFile; fileRef = B02EF12C15F6B0B500BCB400 /* vDispl.frag */; };
-		B02EF13015F6B0B500BCB400 /* vDispl.vert in Resources */ = {isa = PBXBuildFile; fileRef = B02EF12D15F6B0B500BCB400 /* vDispl.vert */; };
+		B02EF12A15F6B0AC00BCB400 /* particles.frag in Resources */ = {isa = PBXBuildFile; fileRef = B02EF12915F6B0AC00BCB400 /* particles.frag */; };
+		B02EF12E15F6B0B500BCB400 /* passThrough.vert in Resources */ = {isa = PBXBuildFile; fileRef = B02EF12B15F6B0B500BCB400 /* passThrough.vert */; };
+		B02EF12F15F6B0B500BCB400 /* vertexDisplacement.frag in Resources */ = {isa = PBXBuildFile; fileRef = B02EF12C15F6B0B500BCB400 /* vertexDisplacement.frag */; };
+		B02EF13015F6B0B500BCB400 /* vertexDisplacement.vert in Resources */ = {isa = PBXBuildFile; fileRef = B02EF12D15F6B0B500BCB400 /* vertexDisplacement.vert */; };
+		B0BEC580169A6737001B4AA7 /* PingPongFbo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B0BEC57E169A6737001B4AA7 /* PingPongFbo.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -44,10 +45,12 @@
 		53E3CDFB0E86099300238D2B /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = /System/Library/Frameworks/Carbon.framework; sourceTree = "<absolute>"; };
 		8D1107310486CEB800E47090 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		8D1107320486CEB800E47090 /* gpuPS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = gpuPS.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		B02EF12915F6B0AC00BCB400 /* pos.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; name = pos.frag; path = ../resources/pos.frag; sourceTree = "<group>"; };
-		B02EF12B15F6B0B500BCB400 /* pos.vert */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; name = pos.vert; path = ../resources/pos.vert; sourceTree = "<group>"; };
-		B02EF12C15F6B0B500BCB400 /* vDispl.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; name = vDispl.frag; path = ../resources/vDispl.frag; sourceTree = "<group>"; };
-		B02EF12D15F6B0B500BCB400 /* vDispl.vert */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; name = vDispl.vert; path = ../resources/vDispl.vert; sourceTree = "<group>"; };
+		B02EF12915F6B0AC00BCB400 /* particles.frag */ = {isa = PBXFileReference; explicitFileType = sourcecode.glsl; fileEncoding = 4; name = particles.frag; path = ../resources/particles.frag; sourceTree = "<group>"; };
+		B02EF12B15F6B0B500BCB400 /* passThrough.vert */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; name = passThrough.vert; path = ../resources/passThrough.vert; sourceTree = "<group>"; };
+		B02EF12C15F6B0B500BCB400 /* vertexDisplacement.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; name = vertexDisplacement.frag; path = ../resources/vertexDisplacement.frag; sourceTree = "<group>"; };
+		B02EF12D15F6B0B500BCB400 /* vertexDisplacement.vert */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; name = vertexDisplacement.vert; path = ../resources/vertexDisplacement.vert; sourceTree = "<group>"; };
+		B0BEC57E169A6737001B4AA7 /* PingPongFbo.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = PingPongFbo.cpp; path = ../src/PingPongFbo.cpp; sourceTree = "<group>"; };
+		B0BEC57F169A6737001B4AA7 /* PingPongFbo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PingPongFbo.h; path = ../src/PingPongFbo.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -75,6 +78,8 @@
 			isa = PBXGroup;
 			children = (
 				00BAE6590E7ED9C10018A608 /* gpuPSApp.cpp */,
+				B0BEC57E169A6737001B4AA7 /* PingPongFbo.cpp */,
+				B0BEC57F169A6737001B4AA7 /* PingPongFbo.h */,
 			);
 			name = Source;
 			sourceTree = "<group>";
@@ -137,10 +142,10 @@
 		29B97317FDCFA39411CA2CEA /* Resources */ = {
 			isa = PBXGroup;
 			children = (
-				B02EF12B15F6B0B500BCB400 /* pos.vert */,
-				B02EF12C15F6B0B500BCB400 /* vDispl.frag */,
-				B02EF12D15F6B0B500BCB400 /* vDispl.vert */,
-				B02EF12915F6B0AC00BCB400 /* pos.frag */,
+				B02EF12B15F6B0B500BCB400 /* passThrough.vert */,
+				B02EF12C15F6B0B500BCB400 /* vertexDisplacement.frag */,
+				B02EF12D15F6B0B500BCB400 /* vertexDisplacement.vert */,
+				B02EF12915F6B0AC00BCB400 /* particles.frag */,
 				8D1107310486CEB800E47090 /* Info.plist */,
 				00CCAF14116A9FEE008396D5 /* CinderApp.icns */,
 			);
@@ -182,6 +187,9 @@
 /* Begin PBXProject section */
 		29B97313FDCFA39411CA2CEA /* Project object */ = {
 			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0450;
+			};
 			buildConfigurationList = C01FCF4E08A954540054247B /* Build configuration list for PBXProject "gpuPS" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
@@ -203,10 +211,10 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				B02EF12A15F6B0AC00BCB400 /* pos.frag in Resources */,
-				B02EF12E15F6B0B500BCB400 /* pos.vert in Resources */,
-				B02EF12F15F6B0B500BCB400 /* vDispl.frag in Resources */,
-				B02EF13015F6B0B500BCB400 /* vDispl.vert in Resources */,
+				B02EF12A15F6B0AC00BCB400 /* particles.frag in Resources */,
+				B02EF12E15F6B0B500BCB400 /* passThrough.vert in Resources */,
+				B02EF12F15F6B0B500BCB400 /* vertexDisplacement.frag in Resources */,
+				B02EF13015F6B0B500BCB400 /* vertexDisplacement.vert in Resources */,
 				00CCAF15116A9FEE008396D5 /* CinderApp.icns in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -219,6 +227,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				00BAE65A0E7ED9C10018A608 /* gpuPSApp.cpp in Sources */,
+				B0BEC580169A6737001B4AA7 /* PingPongFbo.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -229,6 +238,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CINDER_PATH = ../../../../Cinder;
+				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
@@ -250,6 +260,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CINDER_PATH = ../../../../Cinder;
+				COMBINE_HIDPI_IMAGES = YES;
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				GCC_FAST_MATH = YES;
@@ -276,10 +287,12 @@
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = i386;
 				CINDER_PATH = ../../../Cinder;
+				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
+				CLANG_CXX_LIBRARY = "libc++";
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = "\"$(CINDER_PATH)/boost\"";
-				MACOSX_DEPLOYMENT_TARGET = 10.6;
+				MACOSX_DEPLOYMENT_TARGET = 10.8;
 				SDKROOT = macosx;
 				USER_HEADER_SEARCH_PATHS = "\"$(CINDER_PATH)/include\" ../include";
 			};
@@ -291,10 +304,12 @@
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = i386;
 				CINDER_PATH = ../../../Cinder;
+				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
+				CLANG_CXX_LIBRARY = "libc++";
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = "\"$(CINDER_PATH)/boost\"";
-				MACOSX_DEPLOYMENT_TARGET = 10.6;
+				MACOSX_DEPLOYMENT_TARGET = 10.8;
 				SDKROOT = macosx;
 				USER_HEADER_SEARCH_PATHS = "\"$(CINDER_PATH)/include\" ../include";
 			};

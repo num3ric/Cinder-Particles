@@ -1,4 +1,4 @@
-#include "cinder/app/AppBasic.h"
+#include "cinder/app/AppNative.h"
 #include "cinder/gl/Fbo.h"
 #include "cinder/gl/Vbo.h"
 #include "cinder/gl/Texture.h"
@@ -12,20 +12,21 @@
 #include "cinder/Perlin.h"
 #include "cinder/Utilities.h"
 
-#define SIDE 1024
+#include "PingPongFbo.h"
+
+const int SIDE = 1024;
 
 using namespace ci;
 using namespace ci::app;
 using namespace std;
 
-class gpuPSApp : public AppBasic {
+class gpuPSApp : public AppNative {
 public:
 	void	prepareSettings( Settings *settings );
-	void	setupTextures();
-	void	resetFBOs();
+    void    setupPingPongFbo();
 	void	setupVBO();
 	void	setup();
-	void	resize( ResizeEvent event );
+	void	resize( );
 	void	update();
 	void	draw();
 	void    mouseDown( MouseEvent event );
@@ -33,13 +34,10 @@ public:
 	void	keyDown( KeyEvent event );
 	CameraPersp		mCam;
 	Arcball			mArcball;
-	Surface32f		mInitPos, mInitVel;
-	int				mCurrentFBO;
-	int				mOtherFBO;
-	gl::Fbo			mFBO[2];
-	gl::Texture		mPositions, mVelocities;
+
+	PingPongFbo     mPPFbo;
 	gl::VboMesh		mVboMesh;
-	gl::GlslProg	mPosShader, mDisplShader;
+	gl::GlslProg	mParticlesShader, mDisplacementShader;
 };
 
 void gpuPSApp::prepareSettings( Settings *settings )
@@ -48,67 +46,60 @@ void gpuPSApp::prepareSettings( Settings *settings )
 	//settings->setFullScreen(true);
 }
 
-void gpuPSApp::setupTextures(){
-	// Position 2D texture array
-	mInitPos = Surface32f( SIDE, SIDE, true);
-	Surface32f::Iter pixelIter = mInitPos.getIter();
+
+void gpuPSApp::setup()
+{
+	gl::clear();
+	try {
+		// Multiple render targets shader updates the positions/velocities
+		mParticlesShader = gl::GlslProg( loadResource("passThrough.vert"), loadResource("particles.frag"));
+		// Vertex displacement shader
+		mDisplacementShader = gl::GlslProg( loadResource( "vertexDisplacement.vert" ), loadResource( "vertexDisplacement.frag" ));
+	}
+	catch( ci::gl::GlslProgCompileExc &exc ) {
+		std::cout << "Shader compile error: " << endl;
+		std::cout << exc.what();
+	}
+	catch( ... ) {
+		std::cout << "Unable to load shader" << endl;
+	}
+	setupPingPongFbo();
+	// THE VBO HAS TO BE DRAWN AFTER FBO!
+	setupVBO();
+    
+    //	gl::enableDepthRead();
+    //	gl::enableAlphaBlending();
+}
+
+void gpuPSApp::setupPingPongFbo()
+{
+    // TODO: Test with more than 2 texture attachments
+    mPPFbo = PingPongFbo(Vec2i(SIDE, SIDE), 2);
+    // Position 2D texture array
+	Surface32f initPos = Surface32f( SIDE, SIDE, true);
+	Surface32f::Iter pixelIter = initPos.getIter();
 	while( pixelIter.line() ) {
 		while( pixelIter.pixel() ) {
-			/* Initial particle positions are passed in as R,G,B 
+			/* Initial particle positions are passed in as R,G,B
 			 float values. Alpha is used as particle mass. */
-			mInitPos.setPixel( pixelIter.getPos(), ColorAf( Rand::randFloat()-0.5f, Rand::randFloat()-0.5f, Rand::randFloat()-0.5f, Rand::randFloat(0.2f, 1.0f) ) );
+			initPos.setPixel( pixelIter.getPos(), ColorAf( Rand::randFloat()-0.5f, Rand::randFloat()-0.5f, Rand::randFloat()-0.5f, Rand::randFloat(0.2f, 1.0f) ) );
 		}
 	}
-	gl::Texture::Format tFormat;
-	tFormat.setInternalFormat(GL_RGBA32F_ARB);
-	mPositions = gl::Texture( mInitPos, tFormat);
-	mPositions.setWrap( GL_REPEAT, GL_REPEAT );
-	mPositions.setMinFilter( GL_NEAREST );
-	mPositions.setMagFilter( GL_NEAREST );
+    mPPFbo.addTexture(initPos);
 	
 	//Velocity 2D texture array
-	mInitVel = Surface32f( SIDE, SIDE, true);
-	pixelIter = mInitVel.getIter();
+	Surface32f initVel = Surface32f( SIDE, SIDE, true);
+	pixelIter = initVel.getIter();
 	while( pixelIter.line() ) {
 		while( pixelIter.pixel() ) {
 			/* Initial particle velocities are
 			 passed in as R,G,B float values. */
-			mInitVel.setPixel( pixelIter.getPos(), ColorAf( 0.0f, 0.0f, 0.0f, 1.0f ) );
+			initVel.setPixel( pixelIter.getPos(), ColorAf( 0.0f, 0.0f, 0.0f, 1.0f ) );
 		}
 	}
-	mVelocities = gl::Texture( mInitVel, tFormat);
-	mVelocities.setWrap( GL_REPEAT, GL_REPEAT );
-	mVelocities.setMinFilter( GL_NEAREST );
-	mVelocities.setMagFilter( GL_NEAREST );
-}
-
-void gpuPSApp::resetFBOs(){
-	mCurrentFBO = 0;
-	mOtherFBO = 1;
-	mFBO[0].bindFramebuffer();
-	mFBO[1].bindFramebuffer();
-	
-	// Attachment 0 - Positions
-	glDrawBuffer(GL_COLOR_ATTACHMENT0_EXT);
-	gl::setMatricesWindow( mFBO[0].getSize(), false );
-	gl::setViewport( mFBO[0].getBounds() );
-	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	mPositions.enableAndBind();
-	gl::draw( mPositions, mFBO[0].getBounds() );
-	mPositions.unbind();
-	
-	// Attachment 1 - Velocities
-	glDrawBuffer(GL_COLOR_ATTACHMENT1_EXT);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	mVelocities.enableAndBind();
-	gl::draw( mVelocities, mFBO[0].getBounds() );
-	mVelocities.unbind();
-	
-	mFBO[1].unbindFramebuffer();
-	mFBO[0].unbindFramebuffer();
-	mPositions.disable();
-	mVelocities.disable();
+	mPPFbo.addTexture(initVel);
+    
+	mPPFbo.initializeToTextures();
 }
 
 void gpuPSApp::setupVBO(){
@@ -134,40 +125,7 @@ void gpuPSApp::setupVBO(){
 	mVboMesh.bufferTexCoords2d( 0, texCoords );
 }
 
-void gpuPSApp::setup()
-{	
-	gl::clear();
-	try {
-		// Multiple render targets shader updates the positions/velocities
-		mPosShader = gl::GlslProg( loadResource("pos.vert"), loadResource("pos.frag"));
-		// Vertex displacement shader
-		mDisplShader = gl::GlslProg( loadResource( "vDispl.vert" ), loadResource( "vDispl.frag" ));
-	}
-	catch( ci::gl::GlslProgCompileExc &exc ) {
-		std::cout << "Shader compile error: " << endl;
-		std::cout << exc.what();
-	}
-	catch( ... ) {
-		std::cout << "Unable to load shader" << endl;
-	}
-	setupTextures();
-	gl::Fbo::Format format;
-	format.enableDepthBuffer(false);
-	format.enableColorBuffer(true, 2);
-	format.setMinFilter( GL_NEAREST );
-	format.setMagFilter( GL_NEAREST );
-	format.setColorInternalFormat( GL_RGBA32F_ARB );
-	mFBO[0] = gl::Fbo( SIDE, SIDE, format );
-	mFBO[1] = gl::Fbo( SIDE, SIDE, format );
-	resetFBOs();
-	// THE VBO HAS TO BE DRAWN AFTER FBO!
-	setupVBO();
-	
-//	gl::enableDepthRead();
-//	gl::enableAlphaBlending();
-}
-
-void gpuPSApp::resize( ResizeEvent event )
+void gpuPSApp::resize()
 {
 	mArcball.setWindowSize( getWindowSize() );
 	mArcball.setCenter( Vec2f( getWindowWidth() / 2.0f, getWindowHeight() / 2.0f ) );
@@ -180,32 +138,19 @@ void gpuPSApp::resize( ResizeEvent event )
 
 void gpuPSApp::update()
 {	
-	gl::setMatricesWindow( mFBO[0].getSize(), false ); // false to prevent vertical flipping
-	gl::setViewport( mFBO[0].getBounds() );
+	gl::setMatricesWindow( mPPFbo.getSize(), false ); // false to prevent vertical flipping
+	gl::setViewport( mPPFbo.getBounds() );
 	
-	mFBO[ mCurrentFBO ].bindFramebuffer();
+	mPPFbo.updateBind();
 	
-	GLenum buf[2] = {GL_COLOR_ATTACHMENT0_EXT, GL_COLOR_ATTACHMENT1_EXT};
-	glDrawBuffers(2, buf);
-	mFBO[ mOtherFBO ].bindTexture(0, 0);
-	mFBO[ mOtherFBO ].bindTexture(1, 1);
-	mPosShader.bind();
-	mPosShader.uniform( "posArray", 0 );
-	mPosShader.uniform( "velArray", 1 );
-	
-	glBegin(GL_QUADS);
-	glTexCoord2f( 0.0f, 0.0f); glVertex2f( 0.0f, 0.0f);
-	glTexCoord2f( 0.0f, 1.0f); glVertex2f( 0.0f, SIDE);
-	glTexCoord2f( 1.0f, 1.0f); glVertex2f( SIDE, SIDE);
-	glTexCoord2f( 1.0f, 0.0f); glVertex2f( SIDE, 0.0f);
-	glEnd();
-	
-	mPosShader.unbind();
-	mFBO[ mOtherFBO ].unbindTexture();
-	mFBO[ mCurrentFBO ].unbindFramebuffer();
-	
-	mCurrentFBO = ( mCurrentFBO + 1 ) % 2;
-	mOtherFBO   = ( mCurrentFBO + 1 ) % 2;
+    mParticlesShader.bind();
+	mParticlesShader.uniform( "positions", 0 );
+	mParticlesShader.uniform( "velocities", 1 );
+	mPPFbo.drawTextureQuad();
+	mParticlesShader.unbind();
+    
+	mPPFbo.updateUnbind();
+	mPPFbo.swap();
 }
 
 void gpuPSApp::draw()
@@ -214,17 +159,17 @@ void gpuPSApp::draw()
 	gl::setViewport( getWindowBounds() );
 	gl::clear( Color::black() );
 	
-	mFBO[mCurrentFBO].bindTexture(0,0);
-	mDisplShader.bind();
-	mDisplShader.uniform("displacementMap", 0 );
+	mPPFbo.bindTexture(0);
+	mDisplacementShader.bind();
+	mDisplacementShader.uniform("displacementMap", 0 );
 	gl::pushModelView();
 	gl::translate( Vec3f( 0.0f, 0.0f, getWindowHeight() / 2.0f ) );
 	gl::rotate( mArcball.getQuat() );
 	gl::draw( mVboMesh );
     gl::popModelView();
 	
-	mDisplShader.unbind();
-	mFBO[mCurrentFBO].unbindTexture();
+	mDisplacementShader.unbind();
+	mPPFbo.unbindTexture();
 	
 	gl::setMatricesWindow(getWindowSize());
 	gl::drawString( toString( SIDE*SIDE ) + " vertices", Vec2f(32.0f, 32.0f));
@@ -244,8 +189,8 @@ void gpuPSApp::mouseDrag( MouseEvent event )
 
 void gpuPSApp::keyDown( KeyEvent event ){
 	if( event.getChar() == 'r' ) {
-		resetFBOs();
+		mPPFbo.initializeToTextures();
 	}
 }
 
-CINDER_APP_BASIC( gpuPSApp, RendererGl )
+CINDER_APP_NATIVE( gpuPSApp, RendererGl )

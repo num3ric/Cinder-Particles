@@ -1,8 +1,8 @@
 #include "ParticleSystem.h"
 
-#include "cinder/app/AppBasic.h"
+#include "cinder/app/AppNative.h"
 #include "cinder/Utilities.h"
-//#include "cinder/gl/gl.h" <-- included in Particle.h
+#include "cinder/gl/gl.h"
 #include "cinder/Rand.h"
 
 using namespace ci;
@@ -14,7 +14,7 @@ using namespace ci::app;
 */
 
 // BPS stands for Binned Particle System
-class bpsApp : public AppBasic {
+class bpsApp : public AppNative {
  public:	
 	void prepareSettings( Settings *settings );
 	void setup();
@@ -142,4 +142,4 @@ void bpsApp::mouseDrag( MouseEvent event )
 
 
 // This line tells Cinder to actually create the application
-CINDER_APP_BASIC( bpsApp, RendererGl )
+CINDER_APP_NATIVE( bpsApp, RendererGl )
