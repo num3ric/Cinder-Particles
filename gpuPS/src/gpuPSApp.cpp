@@ -3,14 +3,13 @@
 #include "cinder/gl/Vbo.h"
 #include "cinder/gl/Texture.h"
 #include "cinder/gl/GlslProg.h"
-#include "cinder/ArcBall.h"
-#include "cinder/Quaternion.h"
-#include "cinder/Camera.h"
+#include "cinder/MayaCamUI.h"
 #include "cinder/ImageIo.h"
 #include "cinder/Vector.h"
 #include "cinder/Rand.h"
 #include "cinder/Perlin.h"
 #include "cinder/Utilities.h"
+#include "cinder/Ray.h"
 
 #include "PingPongFbo.h"
 
@@ -21,23 +20,27 @@ using namespace ci::app;
 using namespace std;
 
 class gpuPSApp : public AppNative {
-public:
-	void	prepareSettings( Settings *settings );
-    void    setupPingPongFbo();
-	void	setupVBO();
-	void	setup();
-	void	resize( );
-	void	update();
-	void	draw();
-	void    mouseDown( MouseEvent event );
-	void    mouseDrag( MouseEvent event );
-	void	keyDown( KeyEvent event );
-	CameraPersp		mCam;
-	Arcball			mArcball;
-
+private:
+    MayaCamUI       mMayaCam;
 	PingPongFbo     mPPFbo;
 	gl::VboMesh		mVboMesh;
 	gl::GlslProg	mParticlesShader, mDisplacementShader;
+    Vec3f mAttractor;
+    Vec2f mMousePos;
+    
+    void setupPingPongFbo();
+	void setupVBO();
+    void computeAttractorPosition();
+public:
+	void prepareSettings( Settings *settings );
+	void setup();
+	void resize( );
+	void update();
+	void draw();
+    void mouseMove( MouseEvent event );
+	void mouseDown( MouseEvent event );
+	void mouseDrag( MouseEvent event );
+	void keyDown( KeyEvent event );
 };
 
 void gpuPSApp::prepareSettings( Settings *settings )
@@ -67,12 +70,18 @@ void gpuPSApp::setup()
 	// THE VBO HAS TO BE DRAWN AFTER FBO!
 	setupVBO();
     
+    CameraPersp cam;
+	cam.setEyePoint( Vec3f(5.0f, 10.0f, 10.0f) );
+	cam.setCenterOfInterestPoint( Vec3f(0.0f, 0.0f, 0.0f) );
+	cam.setPerspective( 60.0f, getWindowAspectRatio(), 1.0f, 1000.0f );
+	mMayaCam.setCurrentCam( cam );
     //	gl::enableDepthRead();
     //	gl::enableAlphaBlending();
 }
 
 void gpuPSApp::setupPingPongFbo()
 {
+    float scale = 8.0f;
     // TODO: Test with more than 2 texture attachments
     mPPFbo = PingPongFbo(Vec2i(SIDE, SIDE), 2);
     // Position 2D texture array
@@ -81,8 +90,12 @@ void gpuPSApp::setupPingPongFbo()
 	while( pixelIter.line() ) {
 		while( pixelIter.pixel() ) {
 			/* Initial particle positions are passed in as R,G,B
-			 float values. Alpha is used as particle mass. */
-			initPos.setPixel( pixelIter.getPos(), ColorAf( Rand::randFloat()-0.5f, Rand::randFloat()-0.5f, Rand::randFloat()-0.5f, Rand::randFloat(0.2f, 1.0f) ) );
+			 float values. Alpha is used as particle invMass. */
+			initPos.setPixel( pixelIter.getPos(),
+                             ColorAf( scale*Rand::randFloat()-0.5f,
+                                      scale*Rand::randFloat()-0.5f,
+                                      scale*Rand::randFloat()-0.5f,
+                                      Rand::randFloat(0.2f, 1.0f) ) );
 		}
 	}
     mPPFbo.addTexture(initPos);
@@ -127,17 +140,34 @@ void gpuPSApp::setupVBO(){
 
 void gpuPSApp::resize()
 {
-	mArcball.setWindowSize( getWindowSize() );
-	mArcball.setCenter( Vec2f( getWindowWidth() / 2.0f, getWindowHeight() / 2.0f ) );
-	mArcball.setRadius( getWindowHeight() / 2.0f );
-	
-	mCam.lookAt( Vec3f( 0.0f, 0.0f, -450.0f ), Vec3f::zero() );
-	mCam.setPerspective( 60.0f, getWindowAspectRatio(), 0.1f, 2000.0f );
-	gl::setMatrices( mCam );
+	CameraPersp cam = mMayaCam.getCamera();
+	cam.setAspectRatio( getWindowAspectRatio() );
+	mMayaCam.setCurrentCam( cam );
+}
+
+void gpuPSApp::computeAttractorPosition()
+{
+    // The attractor is positioned at the intersection of a ray
+    // from the mouse to a plane perpendicular to the camera.
+    float t = 0;
+    Vec3f right, up;
+    mMayaCam.getCamera().getBillboardVectors(&right, &up);
+    CameraPersp cam = mMayaCam.getCamera();
+	// generate a ray from the camera into our world
+	float u = mMousePos.x / (float) getWindowWidth();
+	float v = mMousePos.y / (float) getWindowHeight();
+	// because OpenGL and Cinder use a coordinate system
+	// where (0, 0) is in the LOWERleft corner, we have to flip the v-coordinate
+	Ray ray = cam.generateRay(u , 1.0f - v, cam.getAspectRatio() );
+    if (ray.calcPlaneIntersection(Vec3f(0.0f,0.0f,0.0f), right.cross(up), &t)) {
+        mAttractor.set(ray.calcPosition(t));
+    }
 }
 
 void gpuPSApp::update()
-{	
+{
+    computeAttractorPosition();
+    
 	gl::setMatricesWindow( mPPFbo.getSize(), false ); // false to prevent vertical flipping
 	gl::setViewport( mPPFbo.getBounds() );
 	
@@ -146,6 +176,7 @@ void gpuPSApp::update()
     mParticlesShader.bind();
 	mParticlesShader.uniform( "positions", 0 );
 	mParticlesShader.uniform( "velocities", 1 );
+    mParticlesShader.uniform( "attractorPos", mAttractor);
 	mPPFbo.drawTextureQuad();
 	mParticlesShader.unbind();
     
@@ -155,19 +186,14 @@ void gpuPSApp::update()
 
 void gpuPSApp::draw()
 {
-	gl::setMatrices( mCam );
+	gl::setMatrices( mMayaCam.getCamera() );
 	gl::setViewport( getWindowBounds() );
 	gl::clear( Color::black() );
-	
+    
 	mPPFbo.bindTexture(0);
 	mDisplacementShader.bind();
 	mDisplacementShader.uniform("displacementMap", 0 );
-	gl::pushModelView();
-	gl::translate( Vec3f( 0.0f, 0.0f, getWindowHeight() / 2.0f ) );
-	gl::rotate( mArcball.getQuat() );
 	gl::draw( mVboMesh );
-    gl::popModelView();
-	
 	mDisplacementShader.unbind();
 	mPPFbo.unbindTexture();
 	
@@ -176,15 +202,20 @@ void gpuPSApp::draw()
 	gl::drawString( toString((int) getAverageFps()) + " fps", Vec2f(32.0f, 52.0f));
 }
 
+void gpuPSApp::mouseMove( MouseEvent event )
+{
+    mMousePos.set(event.getPos());
+}
 
 void gpuPSApp::mouseDown( MouseEvent event )
 {
-    mArcball.mouseDown( event.getPos() );
+    mMayaCam.mouseDown( event.getPos() );
 }
 
 void gpuPSApp::mouseDrag( MouseEvent event )
 {
-    mArcball.mouseDrag( event.getPos() );
+    mMousePos = event.getPos();
+    mMayaCam.mouseDrag( event.getPos(), event.isLeftDown(), event.isMiddleDown(), event.isRightDown() );
 }
 
 void gpuPSApp::keyDown( KeyEvent event ){

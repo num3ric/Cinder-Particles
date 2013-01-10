@@ -14,7 +14,9 @@ PingPongFbo::PingPongFbo(Vec2i textureSize, int nbAttachments)
 , mNbAttachments(nbAttachments)
 , mCurrentFbo(0)
 {
-    assert(mNbAttachments < gl::Fbo::getMaxAttachments());
+    int max =gl::Fbo::getMaxAttachments();
+    std::cout << "Maximum supported number of texture attachments: " << max << std::endl;
+    assert(mNbAttachments < max);
     
     gl::Fbo::Format format;
 	format.enableDepthBuffer(false);

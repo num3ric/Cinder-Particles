@@ -4,24 +4,25 @@
 
 uniform sampler2D positions;
 uniform sampler2D velocities;
+uniform vec3 attractorPos;
 varying vec4 texCoord;
 
 void main(void)
-{	
-	float mass	= texture2D( positions, texCoord.st).a;
-	vec3 p		= texture2D( positions, texCoord.st).rgb;
-	vec3 v		= texture2D( velocities, texCoord.st).rgb;
+{
+	vec3 p0 = texture2D( positions, texCoord.st).rgb;
+	vec3 v0 = texture2D( velocities, texCoord.st).rgb;
+    float invmass = texture2D( positions, texCoord.st).a;
     
-    float x0    = 0.5; //distance from center of sphere to be maintaned
-    float x     = distance(p, vec3(0,0,0)); // current distance
-	vec3 acc	= -0.0002*(x - x0)*p; //apply spring force (hooke's law)
-    
-	vec3 new_v  = v + mass*(acc);
-    new_v = 0.999*new_v; // friction to slow down velocities over time
-	vec3 new_p	= p + new_v;
+    float h = 1.0; //time step
+    vec3 f = attractorPos-p0; //force
+	float fMag = length(f); //force magnitude
+	vec3 v1 = v0 + h * 0.05 * invmass * f/(fMag*fMag); //velocity update
+	v1 = v1 - 0.02 * v1; //friction
+	vec3 p1	= p0 + h * v1; //(symplectic euler) position update
 	
 	//Render to positions texture
-	gl_FragData[0] = vec4(new_p.x, new_p.y, new_p.z, mass);
+	gl_FragData[0] = vec4(p1, invmass);
 	//Render to velocities texture
-	gl_FragData[1] = vec4(new_v.x, new_v.y, new_v.z, 1.0);
+	gl_FragData[1] = vec4(v1, 1.0);
 }
+
