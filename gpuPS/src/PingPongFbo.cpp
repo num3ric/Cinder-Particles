@@ -9,25 +9,6 @@
 #include "PingPongFbo.h"
 #include <assert.h>
 
-PingPongFbo::PingPongFbo(Vec2i textureSize, int nbAttachments)
-: mTextureSize(textureSize)
-, mNbAttachments(nbAttachments)
-, mCurrentFbo(0)
-{
-    int max =gl::Fbo::getMaxAttachments();
-    std::cout << "Maximum supported number of texture attachments: " << max << std::endl;
-    assert(mNbAttachments < max);
-    
-    gl::Fbo::Format format;
-    format.enableDepthBuffer(false);
-    format.enableColorBuffer(true, mNbAttachments);
-    format.setMinFilter( GL_NEAREST );
-    format.setMagFilter( GL_NEAREST );
-    format.setColorInternalFormat( GL_RGBA32F_ARB );
-    mFbos[0] = gl::Fbo( textureSize.x, textureSize.y, format );
-    mFbos[1] = gl::Fbo( textureSize.x, textureSize.y, format );
-}
-
 void PingPongFbo::addTexture(const Surface32f &surface)
 {
     assert(mTextures.size() < mNbAttachments);
@@ -42,7 +23,7 @@ void PingPongFbo::addTexture(const Surface32f &surface)
     mTextures.push_back(tex);
 }
 
-void PingPongFbo::initializeToTextures()
+void PingPongFbo::reloadTextures()
 {
     mFbos[mCurrentFbo].bindFramebuffer();
     mFbos[!mCurrentFbo].bindFramebuffer();

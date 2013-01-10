@@ -83,36 +83,33 @@ void gpuPSApp::setupPingPongFbo()
 {
     float scale = 8.0f;
     // TODO: Test with more than 2 texture attachments
-    mPPFbo = PingPongFbo(Vec2i(SIDE, SIDE), 2);
+    Surface32f surfaces[2];
     // Position 2D texture array
-    Surface32f initPos = Surface32f( SIDE, SIDE, true);
-    Surface32f::Iter pixelIter = initPos.getIter();
+    surfaces[0] = Surface32f( SIDE, SIDE, true);
+    Surface32f::Iter pixelIter = surfaces[0].getIter();
     while( pixelIter.line() ) {
         while( pixelIter.pixel() ) {
             /* Initial particle positions are passed in as R,G,B
              float values. Alpha is used as particle invMass. */
-            initPos.setPixel( pixelIter.getPos(),
-                             ColorAf( scale*Rand::randFloat()-0.5f,
-                                     scale*Rand::randFloat()-0.5f,
-                                     scale*Rand::randFloat()-0.5f,
-                                     Rand::randFloat(0.2f, 1.0f) ) );
+            surfaces[0].setPixel(pixelIter.getPos(),
+                                 ColorAf(scale*Rand::randFloat()-0.5f,
+                                         scale*Rand::randFloat()-0.5f,
+                                         scale*Rand::randFloat()-0.5f,
+                                         Rand::randFloat(0.2f, 1.0f) ) );
         }
     }
-    mPPFbo.addTexture(initPos);
     
     //Velocity 2D texture array
-    Surface32f initVel = Surface32f( SIDE, SIDE, true);
-    pixelIter = initVel.getIter();
+    surfaces[1] = Surface32f( SIDE, SIDE, true);
+    pixelIter = surfaces[1].getIter();
     while( pixelIter.line() ) {
         while( pixelIter.pixel() ) {
             /* Initial particle velocities are
              passed in as R,G,B float values. */
-            initVel.setPixel( pixelIter.getPos(), ColorAf( 0.0f, 0.0f, 0.0f, 1.0f ) );
+            surfaces[1].setPixel( pixelIter.getPos(), ColorAf( 0.0f, 0.0f, 0.0f, 1.0f ) );
         }
     }
-    mPPFbo.addTexture(initVel);
-    
-    mPPFbo.initializeToTextures();
+    mPPFbo = PingPongFbo(surfaces);
 }
 
 void gpuPSApp::setupVBO(){
@@ -219,7 +216,7 @@ void gpuPSApp::mouseDrag( MouseEvent event )
 
 void gpuPSApp::keyDown( KeyEvent event ){
     if( event.getChar() == 'r' ) {
-        mPPFbo.initializeToTextures();
+        mPPFbo.reloadTextures();
     }
 }
 

@@ -45,22 +45,46 @@ class PingPongFbo
         GL_COLOR_ATTACHMENT13_EXT,
         GL_COLOR_ATTACHMENT14_EXT,
         GL_COLOR_ATTACHMENT15_EXT};
-public:
-    PingPongFbo() {};
-    
-    /**
-     * Create a ping-pong fbo with a fixed textureSize and
-     * a fixed number of texture attachments which have to be
-     * added using the addTexture method.
-     */
-    PingPongFbo(Vec2i textureSize, int nbAttachments);
     /**
      * Add texture attachements to the ping-pong fbo.
      * @param surface Surface32f internally copied into a texture.
      */
     void addTexture(const Surface32f &surface);
-    /// Render textures into both fbos.
-    void initializeToTextures();
+public:
+    PingPongFbo() {};
+    
+    /**
+     * Create a ping-pong fbo with n texture attachments.
+     */
+    template <std::size_t n>
+    PingPongFbo(const Surface32f (&surface)[n])
+    : mCurrentFbo(0)
+    , mNbAttachments(n)
+    {
+        if(n == 0) return;
+        mTextureSize = surface[0].getSize();
+        for(int i=0; i<n; i++) {
+            addTexture(surface[i]);
+        }
+        
+        int max =gl::Fbo::getMaxAttachments();
+        std::cout << "Maximum supported number of texture attachments: " << max << std::endl;
+        assert(n < max);
+        
+        gl::Fbo::Format format;
+        format.enableDepthBuffer(false);
+        format.enableColorBuffer(true, mNbAttachments);
+        format.setMinFilter( GL_NEAREST );
+        format.setMagFilter( GL_NEAREST );
+        format.setColorInternalFormat( GL_RGBA32F_ARB );
+        mFbos[0] = gl::Fbo( mTextureSize.x, mTextureSize.y, format );
+        mFbos[1] = gl::Fbo( mTextureSize.x, mTextureSize.y, format );
+        
+        reloadTextures();
+    }
+    
+    /// Render initial textures into both fbos.
+    void reloadTextures();
     ///Swap the two alternating fbos.
     void swap();
     /// Bind one fbo as the source, and the other as a target texture to update the texture.
