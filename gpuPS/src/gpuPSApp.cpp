@@ -27,6 +27,7 @@ private:
     gl::GlslProg mParticlesShader, mDisplacementShader;
     Vec3f mAttractor;
     Vec2f mMousePos;
+    bool mStep;
     
     void setupPingPongFbo();
     void setupVBO();
@@ -52,7 +53,7 @@ void gpuPSApp::prepareSettings( Settings *settings )
 
 void gpuPSApp::setup()
 {
-    gl::clear();
+    mStep = true;
     try {
         // Multiple render targets shader updates the positions/velocities
         mParticlesShader = gl::GlslProg( loadResource("passThrough.vert"), loadResource("particles.frag"));
@@ -66,6 +67,7 @@ void gpuPSApp::setup()
     catch( ... ) {
         std::cout << "Unable to load shader" << endl;
     }
+    gl::clear();
     setupPingPongFbo();
     // THE VBO HAS TO BE DRAWN AFTER FBO!
     setupVBO();
@@ -75,8 +77,8 @@ void gpuPSApp::setup()
     cam.setCenterOfInterestPoint( Vec3f(0.0f, 0.0f, 0.0f) );
     cam.setPerspective( 60.0f, getWindowAspectRatio(), 1.0f, 1000.0f );
     mMayaCam.setCurrentCam( cam );
-    //  gl::enableDepthRead();
-    //  gl::enableAlphaBlending();
+//    gl::enableDepthRead();
+//    gl::enableAlphaBlending();
 }
 
 void gpuPSApp::setupPingPongFbo()
@@ -92,9 +94,9 @@ void gpuPSApp::setupPingPongFbo()
             /* Initial particle positions are passed in as R,G,B
              float values. Alpha is used as particle invMass. */
             surfaces[0].setPixel(pixelIter.getPos(),
-                                 ColorAf(scale*Rand::randFloat()-0.5f,
-                                         scale*Rand::randFloat()-0.5f,
-                                         scale*Rand::randFloat()-0.5f,
+                                 ColorAf(scale*(Rand::randFloat()-0.5f),
+                                         scale*(Rand::randFloat()-0.5f),
+                                         scale*(Rand::randFloat()-0.5f),
                                          Rand::randFloat(0.2f, 1.0f) ) );
         }
     }
@@ -124,6 +126,7 @@ void gpuPSApp::setupVBO(){
     layout.setStaticTexCoords2d();
     layout.setStaticNormals();
     //layout.setDynamicColorsRGBA();
+    glPointSize(1.0f);
     mVboMesh = gl::VboMesh( totalVertices, totalVertices, layout, GL_POINTS);
     for( int x = 0; x < SIDE; ++x ) {
         for( int y = 0; y < SIDE; ++y ) {
@@ -160,26 +163,29 @@ void gpuPSApp::computeAttractorPosition()
 
 void gpuPSApp::update()
 {
-    computeAttractorPosition();
-    
-    gl::setMatricesWindow( mPPFbo.getSize(), false ); // false to prevent vertical flipping
-    gl::setViewport( mPPFbo.getBounds() );
-    
-    mPPFbo.updateBind();
-    
-    mParticlesShader.bind();
-    mParticlesShader.uniform( "positions", 0 );
-    mParticlesShader.uniform( "velocities", 1 );
-    mParticlesShader.uniform( "attractorPos", mAttractor);
-    mPPFbo.drawTextureQuad();
-    mParticlesShader.unbind();
-    
-    mPPFbo.updateUnbind();
-    mPPFbo.swap();
+    if (mStep) {
+        computeAttractorPosition();
+        
+        gl::setMatricesWindow( mPPFbo.getSize(), false ); // false to prevent vertical flipping
+        gl::setViewport( mPPFbo.getBounds() );
+        
+        mPPFbo.updateBind();
+        
+        mParticlesShader.bind();
+        mParticlesShader.uniform( "positions", 0 );
+        mParticlesShader.uniform( "velocities", 1 );
+        mParticlesShader.uniform( "attractorPos", mAttractor);
+        mPPFbo.drawTextureQuad();
+        mParticlesShader.unbind();
+        
+        mPPFbo.updateUnbind();
+        mPPFbo.swap();
+    }
 }
 
 void gpuPSApp::draw()
 {
+    
     gl::setMatrices( mMayaCam.getCamera() );
     gl::setViewport( getWindowBounds() );
     gl::clear( Color::white() );
@@ -217,6 +223,8 @@ void gpuPSApp::mouseDrag( MouseEvent event )
 void gpuPSApp::keyDown( KeyEvent event ){
     if( event.getChar() == 'r' ) {
         mPPFbo.reloadTextures();
+    } else if (event.getChar() == ' ') {
+        mStep = !mStep;
     }
 }
 
