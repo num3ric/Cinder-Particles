@@ -69,9 +69,10 @@ public:
     void updateUnbind();
     /**
      * Bind the texture of the current fbo.
-     * @param i Texture index.
+     * @param i Texture unit.
+     * @param i Texture attachment.
      */
-    void bindTexture(int i);
+    void bindTexture(int textureUnit, int attachment);
     /// Unbind the texture of the current fbo.
     void unbindTexture();
     /// Get the fbo/texture size.

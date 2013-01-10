@@ -153,11 +153,8 @@ void gpuPSApp::computeAttractorPosition()
     Vec3f right, up;
     mMayaCam.getCamera().getBillboardVectors(&right, &up);
     CameraPersp cam = mMayaCam.getCamera();
-    // generate a ray from the camera into our world
     float u = mMousePos.x / (float) getWindowWidth();
     float v = mMousePos.y / (float) getWindowHeight();
-    // because OpenGL and Cinder use a coordinate system
-    // where (0, 0) is in the LOWERleft corner, we have to flip the v-coordinate
     Ray ray = cam.generateRay(u , 1.0f - v, cam.getAspectRatio() );
     if (ray.calcPlaneIntersection(Vec3f(0.0f,0.0f,0.0f), right.cross(up), &t)) {
         mAttractor.set(ray.calcPosition(t));
@@ -188,11 +185,13 @@ void gpuPSApp::draw()
 {
     gl::setMatrices( mMayaCam.getCamera() );
     gl::setViewport( getWindowBounds() );
-    gl::clear( Color::black() );
+    gl::clear( Color::white() );
     
-    mPPFbo.bindTexture(0);
+    mPPFbo.bindTexture(0,0);
+    mPPFbo.bindTexture(1,1);
     mDisplacementShader.bind();
     mDisplacementShader.uniform("displacementMap", 0 );
+    mDisplacementShader.uniform("velocityMap", 1);
     gl::draw( mVboMesh );
     mDisplacementShader.unbind();
     mPPFbo.unbindTexture();

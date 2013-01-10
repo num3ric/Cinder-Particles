@@ -88,9 +88,9 @@ void PingPongFbo::updateUnbind()
     mFbos[ mCurrentFbo ].unbindFramebuffer();
 }
 
-void PingPongFbo::bindTexture(int i)
+void PingPongFbo::bindTexture(int textureUnit, int attachment)
 {
-    mFbos[mCurrentFbo].bindTexture(i, i);
+    mFbos[mCurrentFbo].bindTexture(textureUnit, attachment);
 }
 
 void PingPongFbo::unbindTexture()
