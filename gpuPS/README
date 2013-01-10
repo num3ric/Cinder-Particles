@@ -1,4 +1,9 @@
-This project was built on Mac OS 10.6.4 in XCode. You are on your own on Windows where you'll have to import resources differently.
+GPU particle system, now updated to work on the latest 'appRewrite' Cinder version.
+https://forum.libcinder.org/#Topic/23286000001389463
+
+Tested on Xcode 4.5.2 and the NVIDIA GeForce GT 650M 1024 graphics card.
+
+See the original project discussion here: https://forum.libcinder.org/topic/on-my-way-towards-the-million
 
 Éric Renaud-Houde
 num3ric.com

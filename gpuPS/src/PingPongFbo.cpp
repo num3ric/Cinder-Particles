@@ -19,13 +19,13 @@ PingPongFbo::PingPongFbo(Vec2i textureSize, int nbAttachments)
     assert(mNbAttachments < max);
     
     gl::Fbo::Format format;
-	format.enableDepthBuffer(false);
-	format.enableColorBuffer(true, mNbAttachments);
-	format.setMinFilter( GL_NEAREST );
-	format.setMagFilter( GL_NEAREST );
-	format.setColorInternalFormat( GL_RGBA32F_ARB );
-	mFbos[0] = gl::Fbo( textureSize.x, textureSize.y, format );
-	mFbos[1] = gl::Fbo( textureSize.x, textureSize.y, format );
+    format.enableDepthBuffer(false);
+    format.enableColorBuffer(true, mNbAttachments);
+    format.setMinFilter( GL_NEAREST );
+    format.setMagFilter( GL_NEAREST );
+    format.setColorInternalFormat( GL_RGBA32F_ARB );
+    mFbos[0] = gl::Fbo( textureSize.x, textureSize.y, format );
+    mFbos[1] = gl::Fbo( textureSize.x, textureSize.y, format );
 }
 
 void PingPongFbo::addTexture(const Surface32f &surface)
@@ -34,19 +34,19 @@ void PingPongFbo::addTexture(const Surface32f &surface)
     assert(surface.getSize() == mTextureSize);
     
     gl::Texture::Format format;
-	format.setInternalFormat(GL_RGBA32F_ARB);
+    format.setInternalFormat(GL_RGBA32F_ARB);
     TextureRef tex = TextureRef(new gl::Texture( surface, format));
     tex->setWrap( GL_REPEAT, GL_REPEAT );
-	tex->setMinFilter( GL_NEAREST );
-	tex->setMagFilter( GL_NEAREST );
-	mTextures.push_back(tex);
+    tex->setMinFilter( GL_NEAREST );
+    tex->setMagFilter( GL_NEAREST );
+    mTextures.push_back(tex);
 }
 
 void PingPongFbo::initializeToTextures()
 {
-	mFbos[mCurrentFbo].bindFramebuffer();
-	mFbos[!mCurrentFbo].bindFramebuffer();
-	
+    mFbos[mCurrentFbo].bindFramebuffer();
+    mFbos[!mCurrentFbo].bindFramebuffer();
+    
     
     gl::setMatricesWindow( getSize(), false );
     gl::setViewport( getBounds() );
@@ -59,23 +59,23 @@ void PingPongFbo::initializeToTextures()
         mTextures[i]->unbind();
         mTextures[i]->disable();
     }
-	
-	mFbos[!mCurrentFbo].unbindFramebuffer();
-	mFbos[mCurrentFbo].unbindFramebuffer();
+    
+    mFbos[!mCurrentFbo].unbindFramebuffer();
+    mFbos[mCurrentFbo].unbindFramebuffer();
 }
 
 void PingPongFbo::swap()
 {
-	mCurrentFbo = !mCurrentFbo;
+    mCurrentFbo = !mCurrentFbo;
 }
 
 void PingPongFbo::updateBind()
 {
     mFbos[ mCurrentFbo ].bindFramebuffer();
     
-	GLenum buf[mNbAttachments];
+    GLenum buf[mNbAttachments];
     std::copy(glAttachements, glAttachements + mNbAttachments, buf);
-	glDrawBuffers(mNbAttachments, buf);
+    glDrawBuffers(mNbAttachments, buf);
     
     for(int i=0; i<mNbAttachments; ++i) {
         mFbos[!mCurrentFbo].bindTexture(i, i);
@@ -85,7 +85,7 @@ void PingPongFbo::updateBind()
 void PingPongFbo::updateUnbind()
 {
     mFbos[ !mCurrentFbo ].unbindTexture();
-	mFbos[ mCurrentFbo ].unbindFramebuffer();
+    mFbos[ mCurrentFbo ].unbindFramebuffer();
 }
 
 void PingPongFbo::bindTexture(int i)
@@ -112,9 +112,9 @@ Area PingPongFbo::getBounds() const
 void PingPongFbo::drawTextureQuad() const
 {
     glBegin(GL_QUADS);
-	glTexCoord2f( 0.0f, 0.0f); glVertex2f( 0.0f, 0.0f);
-	glTexCoord2f( 0.0f, 1.0f); glVertex2f( 0.0f, mTextureSize.y);
-	glTexCoord2f( 1.0f, 1.0f); glVertex2f( mTextureSize.x, mTextureSize.y);
-	glTexCoord2f( 1.0f, 0.0f); glVertex2f( mTextureSize.x, 0.0f);
-	glEnd();
+    glTexCoord2f( 0.0f, 0.0f); glVertex2f( 0.0f, 0.0f);
+    glTexCoord2f( 0.0f, 1.0f); glVertex2f( 0.0f, mTextureSize.y);
+    glTexCoord2f( 1.0f, 1.0f); glVertex2f( mTextureSize.x, mTextureSize.y);
+    glTexCoord2f( 1.0f, 0.0f); glVertex2f( mTextureSize.x, 0.0f);
+    glEnd();
 }
