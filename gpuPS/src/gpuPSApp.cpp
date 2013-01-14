@@ -175,7 +175,7 @@ void gpuPSApp::update()
         mParticlesShader.uniform( "positions", 0 );
         mParticlesShader.uniform( "velocities", 1 );
         mParticlesShader.uniform( "attractorPos", mAttractor);
-        mPPFbo.drawTextureQuad();
+        gl::drawSolidRect(mPPFbo.getBounds());
         mParticlesShader.unbind();
         
         mPPFbo.updateUnbind();
@@ -190,8 +190,8 @@ void gpuPSApp::draw()
     gl::setViewport( getWindowBounds() );
     gl::clear( Color::white() );
     
-    mPPFbo.bindTexture(0,0);
-    mPPFbo.bindTexture(1,1);
+    mPPFbo.bindTexture(0);
+    mPPFbo.bindTexture(1);
     mDisplacementShader.bind();
     mDisplacementShader.uniform("displacementMap", 0 );
     mDisplacementShader.uniform("velocityMap", 1);
