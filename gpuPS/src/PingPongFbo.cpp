@@ -11,7 +11,7 @@
 
 void PingPongFbo::addTexture(const Surface32f &surface)
 {
-    assert(mTextures.size() < mNbAttachments);
+    assert(mTextures.size() < mAttachments.size());
     assert(surface.getSize() == mTextureSize);
     
     gl::Texture::Format format;
@@ -28,12 +28,11 @@ void PingPongFbo::reloadTextures()
     mFbos[mCurrentFbo].bindFramebuffer();
     mFbos[!mCurrentFbo].bindFramebuffer();
     
-    
     gl::setMatricesWindow( getSize(), false );
     gl::setViewport( getBounds() );
     gl::clear();
-    for(int i=0; i<mNbAttachments; ++i) {
-        glDrawBuffer(glAttachements[i]);
+    for(int i=0; i<mAttachments.size(); ++i) {
+        glDrawBuffer(GL_COLOR_ATTACHMENT0_EXT + i);
         
         mTextures[i]->enableAndBind();
         gl::draw( *mTextures[i], getBounds() );
@@ -54,11 +53,9 @@ void PingPongFbo::updateBind()
 {
     mFbos[ mCurrentFbo ].bindFramebuffer();
     
-    GLenum buf[mNbAttachments];
-    std::copy(glAttachements, glAttachements + mNbAttachments, buf);
-    glDrawBuffers(mNbAttachments, buf);
+    glDrawBuffers(mAttachments.size(), &mAttachments[0]);
     
-    for(int i=0; i<mNbAttachments; ++i) {
+    for(int i=0; i<mAttachments.size(); ++i) {
         mFbos[!mCurrentFbo].bindTexture(i, i);
     }
 }
@@ -69,9 +66,9 @@ void PingPongFbo::updateUnbind()
     mFbos[ mCurrentFbo ].unbindFramebuffer();
 }
 
-void PingPongFbo::bindTexture(int textureUnit, int attachment)
+void PingPongFbo::bindTexture(int textureUnit)
 {
-    mFbos[mCurrentFbo].bindTexture(textureUnit, attachment);
+    mFbos[mCurrentFbo].bindTexture(textureUnit, textureUnit);
 }
 
 void PingPongFbo::unbindTexture()
@@ -88,14 +85,4 @@ Vec2i PingPongFbo::getSize() const
 Area PingPongFbo::getBounds() const
 {
     return mFbos[0].getBounds();
-}
-
-void PingPongFbo::drawTextureQuad() const
-{
-    glBegin(GL_QUADS);
-    glTexCoord2f( 0.0f, 0.0f); glVertex2f( 0.0f, 0.0f);
-    glTexCoord2f( 0.0f, 1.0f); glVertex2f( 0.0f, mTextureSize.y);
-    glTexCoord2f( 1.0f, 1.0f); glVertex2f( mTextureSize.x, mTextureSize.y);
-    glTexCoord2f( 1.0f, 0.0f); glVertex2f( mTextureSize.x, 0.0f);
-    glEnd();
 }
