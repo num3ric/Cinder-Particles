@@ -51,6 +51,7 @@
 		B02EF12D15F6B0B500BCB400 /* vertexDisplacement.vert */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; name = vertexDisplacement.vert; path = ../resources/vertexDisplacement.vert; sourceTree = "<group>"; };
 		B0BEC57E169A6737001B4AA7 /* PingPongFbo.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = PingPongFbo.cpp; path = ../src/PingPongFbo.cpp; sourceTree = "<group>"; };
 		B0BEC57F169A6737001B4AA7 /* PingPongFbo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PingPongFbo.h; path = ../include/PingPongFbo.h; sourceTree = "<group>"; };
+		B0D0549A16BF88E0004BBB1C /* Resources.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Resources.h; path = ../include/Resources.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -133,6 +134,7 @@
 		29B97315FDCFA39411CA2CEA /* Headers */ = {
 			isa = PBXGroup;
 			children = (
+				B0D0549A16BF88E0004BBB1C /* Resources.h */,
 				B0BEC57F169A6737001B4AA7 /* PingPongFbo.h */,
 				32CA4F630368D1EE00C91783 /* gpuPS_Prefix.pch */,
 			);

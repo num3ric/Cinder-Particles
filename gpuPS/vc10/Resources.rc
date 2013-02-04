@@ -1,5 +1,6 @@
 #include "Resources.h"
 
-ID ICON "..\\resources\\cinder_app_icon.ico"
-
-//RES_MY_RESOURCE
+PASSTHROUGH_VERT
+PARTICLES_FRAG
+VERTEXDISPLACEMENT_VERT
+VERTEXDISPLACEMENT_FRAG

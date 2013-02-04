@@ -1,7 +1,7 @@
 GPU particle system, now updated to work on the latest 'appRewrite' Cinder version.
 https://forum.libcinder.org/#Topic/23286000001389463
 
-Tested on Xcode 4.5.2 and the NVIDIA GeForce GT 650M 1024 graphics card.
+Tested on Xcode 4.5.2 and the NVIDIA GeForce GT 650M 1024 graphics card, and now patched with VC10 support.
 
 See the original project discussion here: https://forum.libcinder.org/topic/on-my-way-towards-the-million
 

@@ -12,6 +12,7 @@
 #include "cinder/Ray.h"
 
 #include "PingPongFbo.h"
+#include "Resources.h"
 
 const int SIDE = 1024;
 
@@ -56,9 +57,9 @@ void gpuPSApp::setup()
     mStep = true;
     try {
         // Multiple render targets shader updates the positions/velocities
-        mParticlesShader = gl::GlslProg( loadResource("passThrough.vert"), loadResource("particles.frag"));
+        mParticlesShader = gl::GlslProg( ci::app::loadResource( PASSTHROUGH_VERT ), ci::app::loadResource( PARTICLES_FRAG ));
         // Vertex displacement shader
-        mDisplacementShader = gl::GlslProg( loadResource( "vertexDisplacement.vert" ), loadResource( "vertexDisplacement.frag" ));
+        mDisplacementShader = gl::GlslProg( ci::app::loadResource( VERTEXDISPLACEMENT_VERT ), ci::app::loadResource( VERTEXDISPLACEMENT_FRAG ));
     }
     catch( ci::gl::GlslProgCompileExc &exc ) {
         std::cout << "Shader compile error: " << endl;
