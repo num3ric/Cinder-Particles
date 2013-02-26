@@ -3,6 +3,7 @@
 *.mode2v3
 *.user
 *.xcuserdatad
+xcuserdata/
 .DS_Store
 
 build/

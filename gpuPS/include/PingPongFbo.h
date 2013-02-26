@@ -14,25 +14,8 @@
 
 using namespace ci;
 
-//FIXME: Why can't I use unique_ptr here?
-typedef std::shared_ptr<gl::Texture> TextureRef;
-
 class PingPongFbo
 {
-    Vec2i mTextureSize;
-    int mCurrentFbo; //either 0 or 1
-    
-    /** Texture attachments per framebuffer. */
-    std::vector<TextureRef> mTextures;
-    /** GLenum texure attachments */
-    std::vector<GLenum> mAttachments;
-    /** Two alternating framebuffers */
-    gl::Fbo	mFbos[2];
-    /**
-     * Add texture attachements to the ping-pong fbo.
-     * @param surface Surface32f internally copied into a texture.
-     */
-    void addTexture(const Surface32f &surface);
 public:
     PingPongFbo() {};
     
@@ -87,4 +70,19 @@ public:
     Vec2i getSize() const;
     /// Get the fbo/texture size.
     Area getBounds() const;
+private:
+	Vec2i mTextureSize;
+    int mCurrentFbo; //either 0 or 1
+    
+    /** Texture attachments per framebuffer. */
+    std::vector<gl::Texture> mTextures;
+    /** GLenum texure attachments */
+    std::vector<GLenum> mAttachments;
+    /** Two alternating framebuffers */
+    gl::Fbo	mFbos[2];
+    /**
+     * Add texture attachements to the ping-pong fbo.
+     * @param surface Surface32f internally copied into a texture.
+     */
+    void addTexture(const Surface32f &surface);
 };
