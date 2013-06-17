@@ -10,14 +10,44 @@
 #include <assert.h>
 #include <utility>
 
+
+PingPongFbo::PingPongFbo( const std::vector<Surface32f>& surfaces )
+: mCurrentFbo(0)
+{
+	if( surfaces.empty() ) return;
+	
+	int i = 0;
+	mTextureSize = surfaces[0].getSize();
+	for( const Surface32f& s : surfaces) {
+		mAttachments.push_back(GL_COLOR_ATTACHMENT0_EXT + i);
+		addTexture(s);
+		i++;
+	}
+	
+	int max =gl::Fbo::getMaxAttachments();
+	std::cout << "Maximum supported number of texture attachments: " << max << std::endl;
+	assert(surfaces.size() < max);
+	
+	gl::Fbo::Format format;
+	format.enableDepthBuffer(false);
+	format.enableColorBuffer(true, mAttachments.size());
+	format.setMinFilter( GL_NEAREST );
+	format.setMagFilter( GL_NEAREST );
+	format.setColorInternalFormat( GL_RGBA32F_ARB );
+	mFbos[0] = gl::Fbo( mTextureSize.x, mTextureSize.y, format );
+	mFbos[1] = gl::Fbo( mTextureSize.x, mTextureSize.y, format );
+	
+	reloadTextures();
+}
+
 void PingPongFbo::addTexture(const Surface32f &surface)
 {
     assert(mTextures.size() < mAttachments.size());
     assert(surface.getSize() == mTextureSize);
     
     gl::Texture::Format format;
-    format.setInternalFormat(GL_RGBA32F_ARB);
-	gl::Texture tex = gl::Texture( surface, format);
+    format.setInternalFormat( GL_RGBA32F_ARB );
+	gl::Texture tex = gl::Texture( surface, format );
     tex.setWrap( GL_REPEAT, GL_REPEAT );
     tex.setMinFilter( GL_NEAREST );
     tex.setMagFilter( GL_NEAREST );
