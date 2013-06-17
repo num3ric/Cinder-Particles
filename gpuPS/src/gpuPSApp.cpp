@@ -23,7 +23,7 @@ using namespace std;
 class gpuPSApp : public AppNative {
 private:
     MayaCamUI mMayaCam;
-    PingPongFbo mPPFbo;
+    PingPongFbo mSwapFbo;
     gl::VboMesh mVboMesh;
     gl::GlslProg mParticlesShader, mDisplacementShader;
     Vec3f mAttractor;
@@ -86,9 +86,9 @@ void gpuPSApp::setupPingPongFbo()
 {
     float scale = 8.0f;
     // TODO: Test with more than 2 texture attachments
-    Surface32f surfaces[2];
+	std::vector<Surface32f> surfaces;
     // Position 2D texture array
-    surfaces[0] = Surface32f( SIDE, SIDE, true);
+    surfaces.push_back( Surface32f( SIDE, SIDE, true) );
     Surface32f::Iter pixelIter = surfaces[0].getIter();
     while( pixelIter.line() ) {
         while( pixelIter.pixel() ) {
@@ -103,7 +103,7 @@ void gpuPSApp::setupPingPongFbo()
     }
     
     //Velocity 2D texture array
-    surfaces[1] = Surface32f( SIDE, SIDE, true);
+    surfaces.push_back( Surface32f( SIDE, SIDE, true) );
     pixelIter = surfaces[1].getIter();
     while( pixelIter.line() ) {
         while( pixelIter.pixel() ) {
@@ -112,7 +112,7 @@ void gpuPSApp::setupPingPongFbo()
             surfaces[1].setPixel( pixelIter.getPos(), ColorAf( 0.0f, 0.0f, 0.0f, 1.0f ) );
         }
     }
-    mPPFbo = PingPongFbo(surfaces);
+    mSwapFbo = PingPongFbo( surfaces );
 }
 
 void gpuPSApp::setupVBO(){
@@ -167,20 +167,20 @@ void gpuPSApp::update()
     if (mStep) {
         computeAttractorPosition();
         
-        gl::setMatricesWindow( mPPFbo.getSize(), false ); // false to prevent vertical flipping
-        gl::setViewport( mPPFbo.getBounds() );
+        gl::setMatricesWindow( mSwapFbo.getSize(), false ); // false to prevent vertical flipping
+        gl::setViewport( mSwapFbo.getBounds() );
         
-        mPPFbo.updateBind();
+        mSwapFbo.updateBind();
         
         mParticlesShader.bind();
         mParticlesShader.uniform( "positions", 0 );
         mParticlesShader.uniform( "velocities", 1 );
         mParticlesShader.uniform( "attractorPos", mAttractor);
-        gl::drawSolidRect(mPPFbo.getBounds());
+        gl::drawSolidRect(mSwapFbo.getBounds());
         mParticlesShader.unbind();
         
-        mPPFbo.updateUnbind();
-        mPPFbo.swap();
+        mSwapFbo.updateUnbind();
+        mSwapFbo.swap();
     }
 }
 
@@ -191,14 +191,14 @@ void gpuPSApp::draw()
     gl::setViewport( getWindowBounds() );
     gl::clear( Color::white() );
     
-    mPPFbo.bindTexture(0);
-    mPPFbo.bindTexture(1);
+    mSwapFbo.bindTexture(0);
+    mSwapFbo.bindTexture(1);
     mDisplacementShader.bind();
     mDisplacementShader.uniform("displacementMap", 0 );
     mDisplacementShader.uniform("velocityMap", 1);
     gl::draw( mVboMesh );
     mDisplacementShader.unbind();
-    mPPFbo.unbindTexture();
+    mSwapFbo.unbindTexture();
     
     gl::setMatricesWindow(getWindowSize());
     gl::drawString( toString( SIDE*SIDE ) + " vertices", Vec2f(32.0f, 32.0f));
@@ -223,7 +223,7 @@ void gpuPSApp::mouseDrag( MouseEvent event )
 
 void gpuPSApp::keyDown( KeyEvent event ){
     if( event.getChar() == 'r' ) {
-        mPPFbo.reloadTextures();
+        mSwapFbo.reloadTextures();
     } else if (event.getChar() == ' ') {
         mStep = !mStep;
     }
