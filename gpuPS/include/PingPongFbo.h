@@ -22,28 +22,28 @@ public:
     PingPongFbo() {};
     //! Create a ping-pong fbo with n texture attachments.
     PingPongFbo( const std::vector<Surface32f>& surfaces );
-    //! Render initial textures into both fbos.
-    void reloadTextures();
-    //! Swap the two alternating fbos.
-    void swap();
+    //! Rerender initial textures into both fbos.
+    void reset();
+
     //! Bind one fbo as the source, and the other as a target texture to update the texture.
-    void updateBind();
+    void bindUpdate();
     //! Unbind both the source and the target texture.
-    void updateUnbind();
-    /*!
-     * Bind the texture of the current fbo.
-     * @param i Texture unit.
-     * @param i Texture attachment.
-     */
+    void unbindUpdate();
+	
+    //! Bind the texture of the current fbo.
     void bindTexture(int textureUnit);
     //! Unbind the texture of the current fbo.
     void unbindTexture();
+	
     //! Get the fbo/texture size.
     Vec2i getSize() const;
     //! Get the fbo/texture size.
     Area getBounds() const;
 
 private:
+	//! Swap the two alternating fbos.
+    void swap();
+	
 	Vec2i mTextureSize;
     int mCurrentFbo; //either 0 or 1
     

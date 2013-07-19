@@ -37,7 +37,7 @@ PingPongFbo::PingPongFbo( const std::vector<Surface32f>& surfaces )
 	mFbos[0] = gl::Fbo( mTextureSize.x, mTextureSize.y, format );
 	mFbos[1] = gl::Fbo( mTextureSize.x, mTextureSize.y, format );
 	
-	reloadTextures();
+	reset();
 }
 
 void PingPongFbo::addTexture(const Surface32f &surface)
@@ -54,7 +54,7 @@ void PingPongFbo::addTexture(const Surface32f &surface)
     mTextures.push_back( tex );
 }
 
-void PingPongFbo::reloadTextures()
+void PingPongFbo::reset()
 {
 	mFbos[mCurrentFbo].bindFramebuffer();
     gl::setMatricesWindow( getSize(), false );
@@ -78,7 +78,7 @@ void PingPongFbo::swap()
     mCurrentFbo = !mCurrentFbo;
 }
 
-void PingPongFbo::updateBind()
+void PingPongFbo::bindUpdate()
 {
     mFbos[ mCurrentFbo ].bindFramebuffer();
     
@@ -89,10 +89,12 @@ void PingPongFbo::updateBind()
     }
 }
 
-void PingPongFbo::updateUnbind()
+void PingPongFbo::unbindUpdate()
 {
     mFbos[ !mCurrentFbo ].unbindTexture();
     mFbos[ mCurrentFbo ].unbindFramebuffer();
+	
+	swap();
 }
 
 void PingPongFbo::bindTexture(int textureUnit)
