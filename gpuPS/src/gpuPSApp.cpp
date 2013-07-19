@@ -23,7 +23,7 @@ using namespace std;
 class gpuPSApp : public AppNative {
 private:
     MayaCamUI mMayaCam;
-    PingPongFbo mSwapFbo;
+    PingPongFbo mParticlesFbo;
     gl::VboMesh mVboMesh;
     gl::GlslProg mParticlesShader, mDisplacementShader;
     Vec3f mAttractor;
@@ -112,7 +112,7 @@ void gpuPSApp::setupPingPongFbo()
             surfaces[1].setPixel( pixelIter.getPos(), ColorAf( 0.0f, 0.0f, 0.0f, 1.0f ) );
         }
     }
-    mSwapFbo = PingPongFbo( surfaces );
+    mParticlesFbo = PingPongFbo( surfaces );
 }
 
 void gpuPSApp::setupVBO(){
@@ -167,20 +167,19 @@ void gpuPSApp::update()
     if (mStep) {
         computeAttractorPosition();
         
-        gl::setMatricesWindow( mSwapFbo.getSize(), false ); // false to prevent vertical flipping
-        gl::setViewport( mSwapFbo.getBounds() );
+        gl::setMatricesWindow( mParticlesFbo.getSize(), false ); // false to prevent vertical flipping
+        gl::setViewport( mParticlesFbo.getBounds() );
         
-        mSwapFbo.updateBind();
+        mParticlesFbo.bindUpdate();
         
         mParticlesShader.bind();
         mParticlesShader.uniform( "positions", 0 );
         mParticlesShader.uniform( "velocities", 1 );
         mParticlesShader.uniform( "attractorPos", mAttractor);
-        gl::drawSolidRect(mSwapFbo.getBounds());
+        gl::drawSolidRect(mParticlesFbo.getBounds());
         mParticlesShader.unbind();
         
-        mSwapFbo.updateUnbind();
-        mSwapFbo.swap();
+        mParticlesFbo.unbindUpdate();
     }
 }
 
@@ -191,14 +190,14 @@ void gpuPSApp::draw()
     gl::setViewport( getWindowBounds() );
     gl::clear( Color::white() );
     
-    mSwapFbo.bindTexture(0);
-    mSwapFbo.bindTexture(1);
+    mParticlesFbo.bindTexture(0);
+    mParticlesFbo.bindTexture(1);
     mDisplacementShader.bind();
     mDisplacementShader.uniform("displacementMap", 0 );
     mDisplacementShader.uniform("velocityMap", 1);
     gl::draw( mVboMesh );
     mDisplacementShader.unbind();
-    mSwapFbo.unbindTexture();
+    mParticlesFbo.unbindTexture();
     
     gl::setMatricesWindow(getWindowSize());
     gl::drawString( toString( SIDE*SIDE ) + " vertices", Vec2f(32.0f, 32.0f));
@@ -223,7 +222,7 @@ void gpuPSApp::mouseDrag( MouseEvent event )
 
 void gpuPSApp::keyDown( KeyEvent event ){
     if( event.getChar() == 'r' ) {
-        mSwapFbo.reloadTextures();
+        mParticlesFbo.reset();
     } else if (event.getChar() == ' ') {
         mStep = !mStep;
     }
